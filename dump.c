@@ -65,11 +65,12 @@ int main(int argc, char *argv[]) {
 	}
 	errno = 0;
 	int bytesRead = pread(file, data, amount, offset);
-	close(file);
 	if (errno) {
 		fprintf(stderr, "Reading error: %s\n", strerror(errno));
+		close(file);
 		return EXIT_FAILURE;
 	}
+	close(file);
 	printDump(offset, data, bytesRead, printFormats);
 	return EXIT_SUCCESS;
 }
