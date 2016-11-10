@@ -9,33 +9,41 @@
 #define PRINT_BINARY (1 << 0)
 #define PRINT_DECIMAL (1 << 1)
 #define PRINT_HEX (1 << 2)
+#define PRINT_ALPHA (1 << 3)
 
-static void printDump(int, char *, int, int);
+static void printDump(int, char *, int, int, int);
 
 int main(int argc, char *argv[]) {
 	if (argc < 3) {
-		puts("Usage: <file name> <amount[,offset]> [format: bdx]");
+		puts("Usage: <file name> <[offset,]amount> [format: bdxa]");
 		return EXIT_FAILURE;
 	}
-	char *amountToken = strtok(argv[2], ",");
-	int amount = atoi(amountToken);
-	char *offsetToken = strtok(NULL, ",");
-	int offset = (offsetToken != NULL) ? atoi(offsetToken) : 0;
+	int offset = 0;
+	int amount;
+	if (strchr(argv[2], ',') != NULL) {
+		char *offsetToken = strtok(argv[2], ",");
+		offset = atoi(offsetToken);
+		char *amountToken = strtok(NULL, ",");
+		amount = (amountToken != NULL) ? atoi(amountToken) : 0;
+	} else {
+		amount = atoi(argv[2]);
+	}
 	if (amount < 0) {
 		fputs("Cannot read a negative amount.\n", stderr);
 		return EXIT_FAILURE;
 	}
-	errno = 0;
 	char *data = malloc(amount);
 	if (data == NULL) {
 		fprintf(stderr, "Memory allocation error: %s\n", strerror(errno));
 		return EXIT_FAILURE;
 	}
-	int printFormats;
+	int printFormats = 0;
+	int formatCount = 0;
 	if (argc > 3) {
-		int formatCount = strlen(argv[3]);
-		while (--formatCount >= 0) {
-			char format = argv[3][formatCount];
+		int inputCount = strlen(argv[3]);
+		while (--inputCount >= 0) {
+			int previous = printFormats;
+			char format = argv[3][inputCount];
 			switch (format) {
 			case 'b':
 			case 'B':
@@ -49,9 +57,16 @@ int main(int argc, char *argv[]) {
 			case 'X':
 				printFormats |= PRINT_HEX;
 				break;
+			case 'a':
+			case 'A':
+				printFormats |= PRINT_ALPHA;
+				break;
 			default:
 				printf("Unrecognized print format: %c\n", format);
 				break;
+			}
+			if (printFormats != previous) {
+				formatCount++;
 			}
 		}
 	} else {
@@ -61,17 +76,20 @@ int main(int argc, char *argv[]) {
 	int file = open(fileName, O_RDONLY);
 	if (file < 0) {
 		fprintf(stderr, "Failed to open %s: %s\n", fileName, strerror(errno));
+		free(data);
 		return EXIT_FAILURE;
 	}
 	errno = 0;
 	int bytesRead = pread(file, data, amount, offset);
 	if (errno) {
 		fprintf(stderr, "Reading error: %s\n", strerror(errno));
+		free(data);
 		close(file);
 		return EXIT_FAILURE;
 	}
 	close(file);
-	printDump(offset, data, bytesRead, printFormats);
+	printDump(offset, data, bytesRead, printFormats, formatCount);
+	free(data);
 	return EXIT_SUCCESS;
 }
 
@@ -79,7 +97,7 @@ static const char *binaryString(char value) {
 	static char bits[9] = { [8] = '\0' };
 	int i;
 	for (i = 0; i < 8; i++) {
-		bits[i] = '0' + ((value >> i) & 1);
+		bits[7 - i] = '0' + ((value >> i) & 1);
 	}
 	return bits;
 }
@@ -90,7 +108,7 @@ static void printFormat(int baseOffset, char *data, int amount, int lineLength, 
 	while (amount > 0) {
 		int toPrint = (amount >= lineLength) ? lineLength : amount;
 		int i;
-		printf("%0*d ", padding, baseOffset + offset);
+		printf("%0*d: ", padding, baseOffset + offset);
 		for (i = 0; i < toPrint; i++) {
 			unsigned char value = data[offset + i];
 			switch (format) {
@@ -103,6 +121,9 @@ static void printFormat(int baseOffset, char *data, int amount, int lineLength, 
 			case PRINT_HEX:
 				printf("%02X ", value);
 				break;
+			case PRINT_ALPHA:
+				printf("%c ", (value >= ' ' && value <= '~') ? value : '.');
+				break;
 			}		
 		}
 		putchar('\n');
@@ -111,19 +132,30 @@ static void printFormat(int baseOffset, char *data, int amount, int lineLength, 
 	}
 }
 
-static void printDump(int baseOffset, char *data, int amount, int formats) {
+static void printDump(int baseOffset, char *data, int amount, int formats, int formatCount) {
 	if ((formats & PRINT_BINARY) != 0) {
 		puts("Binary");
 		printFormat(baseOffset, data, amount, 8, PRINT_BINARY);
-		putchar('\n');
+		if (--formatCount > 0) {
+			putchar('\n');
+		}
 	}
 	if ((formats & PRINT_DECIMAL) != 0) {
 		puts("Decimal");
 		printFormat(baseOffset, data, amount, 14, PRINT_DECIMAL);
-		putchar('\n');
+		if (--formatCount > 0) {
+			putchar('\n');
+		}
 	}
 	if ((formats & PRINT_HEX) != 0) {
 		puts("Hexadecimal");
 		printFormat(baseOffset, data, amount, 24, PRINT_HEX);
+		if (--formatCount > 0) {
+			putchar('\n');
+		}
+	}
+	if ((formats & PRINT_ALPHA) != 0) {
+		puts("Alphanumeric");
+		printFormat(baseOffset, data, amount, 36, PRINT_ALPHA);
 	}
 }
