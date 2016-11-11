@@ -115,7 +115,7 @@ static void printFormat(int baseOffset, char *data, int amount, int lineLength, 
 				printf("%s ", binaryString(value));
 				break;
 			case PRINT_DECIMAL:
-				printf("%4d ", value);
+				printf("%3d ", value);
 				break;
 			case PRINT_HEX:
 				printf("%02X ", value);
@@ -141,7 +141,7 @@ static void printDump(int baseOffset, char *data, int amount, int formats, int f
 	}
 	if ((formats & PRINT_DECIMAL) != 0) {
 		puts("Decimal");
-		printFormat(baseOffset, data, amount, 14, PRINT_DECIMAL);
+		printFormat(baseOffset, data, amount, 18, PRINT_DECIMAL);
 		if (--formatCount > 0) {
 			putchar('\n');
 		}
