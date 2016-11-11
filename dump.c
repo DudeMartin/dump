@@ -79,9 +79,8 @@ int main(int argc, char *argv[]) {
 		free(data);
 		return EXIT_FAILURE;
 	}
-	errno = 0;
 	int bytesRead = pread(file, data, amount, offset);
-	if (errno) {
+	if (bytesRead < 0) {
 		fprintf(stderr, "Reading error: %s\n", strerror(errno));
 		free(data);
 		close(file);
@@ -93,7 +92,7 @@ int main(int argc, char *argv[]) {
 	return EXIT_SUCCESS;
 }
 
-static const char *binaryString(char value) {
+static char *binaryString(char value) {
 	static char bits[9] = { [8] = '\0' };
 	int i;
 	for (i = 0; i < 8; i++) {
