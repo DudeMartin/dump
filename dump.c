@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
 }
 
 static char *binaryString(char value) {
-	static char bits[9] = { [8] = '\0' };
+	static char bits[9];
 	int i;
 	for (i = 0; i < 8; i++) {
 		bits[7 - i] = '0' + ((value >> i) & 1);
