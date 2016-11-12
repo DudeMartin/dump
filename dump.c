@@ -11,7 +11,7 @@
 #define PRINT_HEX (1 << 2)
 #define PRINT_ALPHA (1 << 3)
 
-static void printDump(int, char *, int, int, int);
+static void printDump(int, char *, int, int);
 
 int main(int argc, char *argv[]) {
 	if (argc < 3) {
@@ -38,11 +38,9 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 	int printFormats = 0;
-	int formatCount = 0;
 	if (argc > 3) {
 		int inputCount = strlen(argv[3]);
 		while (--inputCount >= 0) {
-			int previous = printFormats;
 			char format = argv[3][inputCount];
 			switch (format) {
 			case 'b':
@@ -65,9 +63,6 @@ int main(int argc, char *argv[]) {
 				printf("Unrecognized print format: %c\n", format);
 				break;
 			}
-			if (printFormats != previous) {
-				formatCount++;
-			}
 		}
 	} else {
 		printFormats = PRINT_DECIMAL;
@@ -87,7 +82,7 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 	close(file);
-	printDump(offset, data, bytesRead, printFormats, formatCount);
+	printDump(offset, data, bytesRead, printFormats);
 	free(data);
 	return EXIT_SUCCESS;
 }
@@ -131,25 +126,28 @@ static void printFormat(int baseOffset, char *data, int amount, int lineLength, 
 	}
 }
 
-static void printDump(int baseOffset, char *data, int amount, int formats, int formatCount) {
+static void printDump(int baseOffset, char *data, int amount, int formats) {
 	if ((formats & PRINT_BINARY) != 0) {
+		formats &= ~PRINT_BINARY;
 		puts("Binary");
 		printFormat(baseOffset, data, amount, 8, PRINT_BINARY);
-		if (--formatCount > 0) {
+		if (formats) {
 			putchar('\n');
 		}
 	}
 	if ((formats & PRINT_DECIMAL) != 0) {
+		formats &= ~PRINT_DECIMAL;
 		puts("Decimal");
 		printFormat(baseOffset, data, amount, 18, PRINT_DECIMAL);
-		if (--formatCount > 0) {
+		if (formats) {
 			putchar('\n');
 		}
 	}
 	if ((formats & PRINT_HEX) != 0) {
+		formats &= ~PRINT_HEX;
 		puts("Hexadecimal");
 		printFormat(baseOffset, data, amount, 24, PRINT_HEX);
-		if (--formatCount > 0) {
+		if (formats) {
 			putchar('\n');
 		}
 	}
