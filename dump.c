@@ -12,14 +12,14 @@
 #define PRINT_HEX (1 << 3)
 #define PRINT_ALPHA (1 << 4)
 
-static void printDump(int, char *, int, int);
+static void printDump(off_t, char *, ssize_t, int);
 
 int main(int argc, char *argv[]) {
 	if (argc < 3) {
 		puts("Usage: <file name> <[offset,]amount> [format: bodxa]");
 		return EXIT_FAILURE;
 	}
-	int offset = 0;
+	off_t offset = 0;
 	int amount;
 	if (strchr(argv[2], ',') != NULL) {
 		char *offsetToken = strtok(argv[2], ",");
@@ -40,9 +40,9 @@ int main(int argc, char *argv[]) {
 	}
 	int printFormats = 0;
 	if (argc > 3) {
-		int inputCount = strlen(argv[3]);
-		while (--inputCount >= 0) {
-			char format = argv[3][inputCount];
+		int formatCount = strlen(argv[3]);
+		while (--formatCount >= 0) {
+			char format = argv[3][formatCount];
 			switch (format) {
 			case 'b':
 			case 'B':
@@ -79,11 +79,24 @@ int main(int argc, char *argv[]) {
 		free(data);
 		return EXIT_FAILURE;
 	}
-	int bytesRead = pread(file, data, amount, offset);
+	if (offset < 0) {
+		off_t size = lseek(file, 0, SEEK_END);
+		if (size < 0) {
+			fprintf(stderr, "Seek error: %s\n", strerror(errno));
+			close(file);
+			free(data);
+			return EXIT_FAILURE;
+		} else if (size > 0) {
+			offset += size;
+		} else {
+			offset = 0;
+		}
+	}
+	ssize_t bytesRead = pread(file, data, amount, offset);
 	if (bytesRead < 0) {
 		fprintf(stderr, "Reading error: %s\n", strerror(errno));
-		free(data);
 		close(file);
+		free(data);
 		return EXIT_FAILURE;
 	}
 	close(file);
@@ -101,13 +114,13 @@ static char *binaryString(char value) {
 	return bits;
 }
 
-static void printFormat(int baseOffset, char *data, int amount, int lineLength, int format) {
+static void printFormat(off_t baseOffset, char *data, ssize_t amount, int lineLength, int format) {
 	const int padding = log10(amount) + 4;
-	int offset = 0;
+	off_t offset = 0;
 	while (amount > 0) {
 		int toPrint = (amount >= lineLength) ? lineLength : amount;
 		int i;
-		printf("%0*d: ", padding, baseOffset + offset);
+		printf("%0*lld: ", padding, baseOffset + offset);
 		for (i = 0; i < toPrint; i++) {
 			unsigned char value = data[offset + i];
 			switch (format) {
@@ -134,7 +147,7 @@ static void printFormat(int baseOffset, char *data, int amount, int lineLength, 
 	}
 }
 
-static void printDump(int baseOffset, char *data, int amount, int formats) {
+static void printDump(off_t baseOffset, char *data, ssize_t amount, int formats) {
 	if ((formats & PRINT_BINARY) != 0) {
 		formats &= ~PRINT_BINARY;
 		puts("Binary");
