@@ -21,7 +21,7 @@ A range argument with a value of ...
 * `16,256` would dump 256 bytes starting at the 17th byte in the file.
 
 #### Format
-The optional format argument specifies the formats to dump the data in. Currently, any combination of `b`, `d`, `x`, and `a` may be used (and their uppercase variants). These dump the contents in binary, decimal, hexadecimal, and alphanumeric respectively. By default, the output format is decimal.
+The optional format argument specifies the formats to dump the data in. Currently, any combination of `b`, `o`, `d`, `x`, and `a` may be used (and their uppercase variants). These dump the contents in binary, octal, decimal, hexadecimal, and alphanumeric respectively. By default, the output format is decimal.
 
 ## Examples
 * `dump example.txt 64,8 bx` would dump 64 bytes starting at the ninth byte from `example.txt` in the local directory, in binary and hexadecimal.

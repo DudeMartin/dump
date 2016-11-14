@@ -7,15 +7,16 @@
 #include <unistd.h>
 
 #define PRINT_BINARY (1 << 0)
-#define PRINT_DECIMAL (1 << 1)
-#define PRINT_HEX (1 << 2)
-#define PRINT_ALPHA (1 << 3)
+#define PRINT_OCTAL (1 << 1)
+#define PRINT_DECIMAL (1 << 2)
+#define PRINT_HEX (1 << 3)
+#define PRINT_ALPHA (1 << 4)
 
 static void printDump(int, char *, int, int);
 
 int main(int argc, char *argv[]) {
 	if (argc < 3) {
-		puts("Usage: <file name> <[offset,]amount> [format: bdxa]");
+		puts("Usage: <file name> <[offset,]amount> [format: bodxa]");
 		return EXIT_FAILURE;
 	}
 	int offset = 0;
@@ -46,6 +47,10 @@ int main(int argc, char *argv[]) {
 			case 'b':
 			case 'B':
 				printFormats |= PRINT_BINARY;
+				break;
+			case 'o':
+			case 'O':
+				printFormats |= PRINT_OCTAL;
 				break;
 			case 'd':
 			case 'D':
@@ -109,6 +114,9 @@ static void printFormat(int baseOffset, char *data, int amount, int lineLength, 
 			case PRINT_BINARY:
 				printf("%s ", binaryString(value));
 				break;
+			case PRINT_OCTAL:
+				printf("%3o ", value);
+				break;
 			case PRINT_DECIMAL:
 				printf("%3d ", value);
 				break;
@@ -131,6 +139,14 @@ static void printDump(int baseOffset, char *data, int amount, int formats) {
 		formats &= ~PRINT_BINARY;
 		puts("Binary");
 		printFormat(baseOffset, data, amount, 8, PRINT_BINARY);
+		if (formats) {
+			putchar('\n');
+		}
+	}
+	if ((formats & PRINT_OCTAL) != 0) {
+		formats &= ~PRINT_OCTAL;
+		puts("Octal");
+		printFormat(baseOffset, data, amount, 18, PRINT_OCTAL);
 		if (formats) {
 			putchar('\n');
 		}
