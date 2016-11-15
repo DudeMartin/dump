@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <errno.h>
 #include <string.h>
 #include <math.h>
 #include <fcntl.h>
@@ -35,7 +34,7 @@ int main(int argc, char *argv[]) {
 	}
 	char *data = malloc(amount);
 	if (data == NULL) {
-		fprintf(stderr, "Memory allocation error: %s\n", strerror(errno));
+		perror("Memory allocation error");
 		return EXIT_FAILURE;
 	}
 	int printFormats = 0;
@@ -75,14 +74,14 @@ int main(int argc, char *argv[]) {
 	char *fileName = argv[1];
 	int file = open(fileName, O_RDONLY);
 	if (file < 0) {
-		fprintf(stderr, "Failed to open %s: %s\n", fileName, strerror(errno));
+		perror("File open error");
 		free(data);
 		return EXIT_FAILURE;
 	}
 	if (offset < 0) {
 		off_t size = lseek(file, 0, SEEK_END);
 		if (size < 0) {
-			fprintf(stderr, "Seek error: %s\n", strerror(errno));
+			perror("Seek error");
 			close(file);
 			free(data);
 			return EXIT_FAILURE;
@@ -94,7 +93,7 @@ int main(int argc, char *argv[]) {
 	}
 	ssize_t bytesRead = pread(file, data, amount, offset);
 	if (bytesRead < 0) {
-		fprintf(stderr, "Reading error: %s\n", strerror(errno));
+		perror("Reading error");
 		close(file);
 		free(data);
 		return EXIT_FAILURE;
