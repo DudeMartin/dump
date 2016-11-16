@@ -19,14 +19,14 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 	off_t offset = 0;
-	int amount;
+	off_t amount;
 	if (strchr(argv[2], ',') != NULL) {
 		char *offsetToken = strtok(argv[2], ",");
-		offset = atoi(offsetToken);
+		offset = atol(offsetToken);
 		char *amountToken = strtok(NULL, ",");
-		amount = (amountToken != NULL) ? atoi(amountToken) : 0;
+		amount = (amountToken != NULL) ? atol(amountToken) : 0;
 	} else {
-		amount = atoi(argv[2]);
+		amount = atol(argv[2]);
 	}
 	if (amount < 0) {
 		fputs("Cannot read a negative amount.\n", stderr);
@@ -138,7 +138,7 @@ static void printFormat(off_t baseOffset, char *data, ssize_t amount, int lineLe
 			case PRINT_ALPHA:
 				printf("%c ", (value >= ' ' && value <= '~') ? value : '.');
 				break;
-			}		
+			}
 		}
 		putchar('\n');
 		amount -= toPrint;
