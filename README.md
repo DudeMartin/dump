@@ -3,7 +3,7 @@ A small C program for dumping the contents of files into standard output.
 
 ## Usage
 
-*dump*: `<Path> <Range> <Format>`
+*dump*: `<Path> <Range> [Format]`
 
 ### Explanation
 #### Path
