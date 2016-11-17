@@ -80,15 +80,15 @@ int main(int argc, char *argv[]) {
 	}
 	if (offset < 0) {
 		off_t size = lseek(file, 0, SEEK_END);
-		if (size < 0) {
+		if (-offset > size || size == 0) {
+			offset = 0;
+		} else if (size < 0) {
 			perror("Seek error");
 			close(file);
 			free(data);
 			return EXIT_FAILURE;
 		} else if (size > 0) {
 			offset += size;
-		} else {
-			offset = 0;
 		}
 	}
 	ssize_t bytesRead = pread(file, data, amount, offset);
