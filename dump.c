@@ -172,10 +172,9 @@ static void printDump(off_t baseOffset, char *data, ssize_t amount, int formats)
 		}
 	}
 	if ((formats & PRINT_HEX) != 0) {
-		formats &= ~PRINT_HEX;
 		puts("Hexadecimal");
 		printFormat(baseOffset, data, amount, 24, PRINT_HEX);
-		if (formats) {
+		if (formats & ~PRINT_HEX) {
 			putchar('\n');
 		}
 	}
